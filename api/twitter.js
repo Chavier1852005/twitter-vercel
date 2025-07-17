@@ -59,11 +59,17 @@ module.exports = async (req, res) => {
         const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
         const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
 
-        const profilePicRes = await axios.get(profilePicUrl, { responseType: "arraybuffer" });
-        const bannerRes = await axios.get(bannerUrl, { responseType: "arraybuffer" });
+        const fetchImage = async (url) => {
+          const res = await axios.get(url, { responseType: "arraybuffer" });
+          const contentType = res.headers["content-type"];
+          if (!contentType.startsWith("image/")) {
+            throw new Error(`Invalid image response from ${url}: ${contentType}`);
+          }
+          return Buffer.from(res.data).toString("base64");
+        };
 
-        const profilePicData = Buffer.from(profilePicRes.data).toString("base64");
-        const bannerData = Buffer.from(bannerRes.data).toString("base64");
+        const profilePicData = await fetchImage(profilePicUrl);
+        const bannerData = await fetchImage(bannerUrl);
 
         console.log("Fetched image sizes:", {
           profilePicSize: profilePicData.length,
