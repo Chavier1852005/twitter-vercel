@@ -80,7 +80,15 @@ module.exports = async (req, res) => {
         await userClient.v1.updateAccountProfileBanner(bannerBuffer);
         console.log("Images uploaded");
 
-        return res.status(200).send("Your X profile has been updated.");
+        // ✅ Return auto-close HTML
+        return res.status(200).send(`
+          <html>
+            <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;text-align:center;padding-top:100px;">
+              <h1>Profile updated successfully 🎉</h1>
+              <script>setTimeout(() => window.close(), 1500);</script>
+            </body>
+          </html>
+        `);
       } catch (err) {
         console.error("Callback step failed:", err);
         return res.status(500).json({
