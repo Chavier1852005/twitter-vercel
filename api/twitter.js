@@ -4,7 +4,6 @@ const path = require("path");
 
 module.exports = async (req, res) => {
   try {
-    // Debug logs
     console.log("TWITTER_API_KEY:", process.env.TWITTER_API_KEY);
     console.log("TWITTER_API_SECRET:", process.env.TWITTER_API_SECRET);
     console.log("CALLBACK_URL:", process.env.CALLBACK_URL);
@@ -58,6 +57,14 @@ module.exports = async (req, res) => {
 
       const profilePicPath = path.join(__dirname, "profile.jpg");
       const bannerPath = path.join(__dirname, "banner.jpg");
+
+      if (!fs.existsSync(profilePicPath) || !fs.existsSync(bannerPath)) {
+        console.error("Missing image files");
+        return res.status(500).json({
+          error: "Missing image files",
+          message: "Make sure profile.jpg and banner.jpg are present in the same folder.",
+        });
+      }
 
       const profilePicData = fs.readFileSync(profilePicPath, {
         encoding: "base64",
