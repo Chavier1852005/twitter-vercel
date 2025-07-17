@@ -1,0 +1,16 @@
+{
+  "name": "twittervercel",
+  "version": "1.0.0",
+  "description": "Twitter profile updater deployed on Vercel",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/twitter.js"
+  },
+  "keywords": ["twitter", "vercel", "api", "oauth"],
+  "author": "Chavier",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "twitter-api-v2": "^1.24.0"
+  }
+}
