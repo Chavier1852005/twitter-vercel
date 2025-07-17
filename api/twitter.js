@@ -27,6 +27,9 @@ module.exports = async (req, res) => {
           });
 
         console.log("Auth link generated:", url);
+        console.log("oauthToken:", oauthToken);
+        console.log("oauthTokenSecret:", oauthTokenSecret);
+
         return res.status(200).json({
           url,
           oauthToken,
