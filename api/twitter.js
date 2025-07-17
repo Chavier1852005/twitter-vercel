@@ -25,9 +25,7 @@ module.exports = async (req, res) => {
           authAccessType: "write",
         });
 
-        console.log("Auth link generated:", authResponse.url);
-        console.log("oauthToken:", authResponse.oauthToken);
-        console.log("oauthTokenSecret:", authResponse.oauthTokenSecret);
+        console.log("Full auth response:", authResponse);
 
         return res.status(200).json(authResponse);
       } catch (err) {
