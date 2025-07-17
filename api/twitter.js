@@ -17,16 +17,29 @@ module.exports = async (req, res) => {
     });
 
     if (req.method === "GET" && req.query.step === "auth") {
-      const { url, oauthToken, oauthTokenSecret } =
-        await client.generateAuthLink(process.env.CALLBACK_URL, {
-          authAccessType: "write",
-        });
+      try {
+        console.log("Starting auth step...");
+        console.log("Using CALLBACK_URL:", process.env.CALLBACK_URL);
 
-      return res.status(200).json({
-        url,
-        oauthToken,
-        oauthTokenSecret,
-      });
+        const { url, oauthToken, oauthTokenSecret } =
+          await client.generateAuthLink(process.env.CALLBACK_URL, {
+            authAccessType: "write",
+          });
+
+        console.log("Auth link generated:", url);
+        return res.status(200).json({
+          url,
+          oauthToken,
+          oauthTokenSecret,
+        });
+      } catch (err) {
+        console.error("Auth step failed:", err);
+        return res.status(500).json({
+          error: "Auth step failed",
+          message: err.message,
+          stack: err.stack,
+        });
+      }
     }
 
     if (req.method === "POST" && req.body.step === "callback") {
@@ -66,6 +79,10 @@ module.exports = async (req, res) => {
     return res.status(400).send("Invalid request");
   } catch (error) {
     console.error("Function error:", error);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({
+      error: "Function crashed",
+      message: error.message,
+      stack: error.stack,
+    });
   }
 };
