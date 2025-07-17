@@ -32,43 +32,47 @@ module.exports = async (req, res) => {
       }
     }
 
-    if (req.method === "POST" && req.body.step === "callback") {
-      const { oauthToken, oauthVerifier, oauthTokenSecret } = req.body;
+if (req.method === "POST" && req.body.step === "callback") {
+  const { oauthToken, oauthVerifier, oauthTokenSecret } = req.body;
 
-      const loginClient = new TwitterApi({
-        appKey: process.env.TWITTER_API_KEY,
-        appSecret: process.env.TWITTER_API_SECRET,
-        accessToken: oauthToken,
-        accessSecret: oauthTokenSecret,
-      });
+  const loginClient = new TwitterApi({
+    appKey: process.env.TWITTER_API_KEY,
+    appSecret: process.env.TWITTER_API_SECRET,
+    accessToken: oauthToken,
+    accessSecret: oauthTokenSecret,
+  });
 
-      const { client: userClient } = await loginClient.login(oauthVerifier);
+  const { client: userClient } = await loginClient.login(oauthVerifier);
 
-      await userClient.v1.updateAccountProfile({
-        name: "New Display Name",
-        description: "New bio here.",
-        url: "https://ko-fi.com/darkmea",
-      });
+  await userClient.v1.updateAccountProfile({
+    name: "New Display Name",
+    description: "New bio here.",
+    url: "https://ko-fi.com/darkmea",
+  });
 
-      const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
-      const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
+  const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
+  const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
 
-      const profilePicData = (await axios.get(profilePicUrl, { responseType: "arraybuffer" })).data.toString("base64");
-      const bannerData = (await axios.get(bannerUrl, { responseType: "arraybuffer" })).data.toString("base64");
+  try {
+    const profilePicRes = await axios.get(profilePicUrl, { responseType: "arraybuffer" });
+    const bannerRes = await axios.get(bannerUrl, { responseType: "arraybuffer" });
 
-      await userClient.v1.updateAccountProfileImage(profilePicData);
-      await userClient.v1.updateAccountProfileBanner(bannerData);
+    const profilePicData = Buffer.from(profilePicRes.data).toString("base64");
+    const bannerData = Buffer.from(bannerRes.data).toString("base64");
 
-      return res.status(200).send("Your X profile has been updated.");
-    }
+    console.log("Fetched profile image size:", profilePicData.length);
+    console.log("Fetched banner image size:", bannerData.length);
 
-    return res.status(400).send("Invalid request");
-  } catch (error) {
-    console.error("Function error:", error);
+    await userClient.v1.updateAccountProfileImage(profilePicData);
+    await userClient.v1.updateAccountProfileBanner(bannerData);
+
+    return res.status(200).send("Your X profile has been updated.");
+  } catch (err) {
+    console.error("Image fetch or upload failed:", err);
     return res.status(500).json({
-      error: "Function crashed",
-      message: error.message,
-      stack: error.stack,
+      error: "Image fetch or upload failed",
+      message: err.message,
+      stack: err.stack,
     });
   }
-};
+}
