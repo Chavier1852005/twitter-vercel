@@ -21,20 +21,15 @@ module.exports = async (req, res) => {
         console.log("Starting auth step...");
         console.log("Using CALLBACK_URL:", process.env.CALLBACK_URL);
 
-        const { url, oauthToken, oauthTokenSecret } =
-          await client.generateAuthLink(process.env.CALLBACK_URL, {
-            authAccessType: "write",
-          });
-
-        console.log("Auth link generated:", url);
-        console.log("oauthToken:", oauthToken);
-        console.log("oauthTokenSecret:", oauthTokenSecret);
-
-        return res.status(200).json({
-          url,
-          oauthToken,
-          oauthTokenSecret,
+        const authResponse = await client.generateAuthLink(process.env.CALLBACK_URL, {
+          authAccessType: "write",
         });
+
+        console.log("Auth link generated:", authResponse.url);
+        console.log("oauthToken:", authResponse.oauthToken);
+        console.log("oauthTokenSecret:", authResponse.oauthTokenSecret);
+
+        return res.status(200).json(authResponse);
       } catch (err) {
         console.error("Auth step failed:", err);
         return res.status(500).json({
