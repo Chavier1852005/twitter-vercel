@@ -14,6 +14,7 @@ module.exports = async (req, res) => {
       appSecret: process.env.TWITTER_API_SECRET,
     });
 
+    // 🔐 Step 1: Generate Auth Link
     if (req.method === "GET" && req.query.step === "auth") {
       try {
         const authResponse = await client.generateAuthLink(process.env.CALLBACK_URL, {
@@ -32,47 +33,66 @@ module.exports = async (req, res) => {
       }
     }
 
-if (req.method === "POST" && req.body.step === "callback") {
-  const { oauthToken, oauthVerifier, oauthTokenSecret } = req.body;
+    // 🔁 Step 2: Handle Callback
+    if (req.method === "POST" && req.body.step === "callback") {
+      try {
+        const { oauthToken, oauthVerifier, oauthTokenSecret } = req.body;
+        console.log("Received callback payload:", { oauthToken, oauthVerifier, oauthTokenSecret });
 
-  const loginClient = new TwitterApi({
-    appKey: process.env.TWITTER_API_KEY,
-    appSecret: process.env.TWITTER_API_SECRET,
-    accessToken: oauthToken,
-    accessSecret: oauthTokenSecret,
-  });
+        const loginClient = new TwitterApi({
+          appKey: process.env.TWITTER_API_KEY,
+          appSecret: process.env.TWITTER_API_SECRET,
+          accessToken: oauthToken,
+          accessSecret: oauthTokenSecret,
+        });
 
-  const { client: userClient } = await loginClient.login(oauthVerifier);
+        const { client: userClient } = await loginClient.login(oauthVerifier);
+        console.log("Logged in to Twitter API");
 
-  await userClient.v1.updateAccountProfile({
-    name: "New Display Name",
-    description: "New bio here.",
-    url: "https://ko-fi.com/darkmea",
-  });
+        await userClient.v1.updateAccountProfile({
+          name: "New Display Name",
+          description: "New bio here.",
+          url: "https://ko-fi.com/darkmea",
+        });
+        console.log("Profile text updated");
 
-  const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
-  const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
+        const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
+        const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
 
-  try {
-    const profilePicRes = await axios.get(profilePicUrl, { responseType: "arraybuffer" });
-    const bannerRes = await axios.get(bannerUrl, { responseType: "arraybuffer" });
+        const profilePicRes = await axios.get(profilePicUrl, { responseType: "arraybuffer" });
+        const bannerRes = await axios.get(bannerUrl, { responseType: "arraybuffer" });
 
-    const profilePicData = Buffer.from(profilePicRes.data).toString("base64");
-    const bannerData = Buffer.from(bannerRes.data).toString("base64");
+        const profilePicData = Buffer.from(profilePicRes.data).toString("base64");
+        const bannerData = Buffer.from(bannerRes.data).toString("base64");
 
-    console.log("Fetched profile image size:", profilePicData.length);
-    console.log("Fetched banner image size:", bannerData.length);
+        console.log("Fetched image sizes:", {
+          profilePicSize: profilePicData.length,
+          bannerSize: bannerData.length,
+        });
 
-    await userClient.v1.updateAccountProfileImage(profilePicData);
-    await userClient.v1.updateAccountProfileBanner(bannerData);
+        await userClient.v1.updateAccountProfileImage(profilePicData);
+        await userClient.v1.updateAccountProfileBanner(bannerData);
+        console.log("Images uploaded");
 
-    return res.status(200).send("Your X profile has been updated.");
-  } catch (err) {
-    console.error("Image fetch or upload failed:", err);
+        return res.status(200).send("Your X profile has been updated.");
+      } catch (err) {
+        console.error("Callback step failed:", err);
+        return res.status(500).json({
+          error: "Callback step failed",
+          message: err.message,
+          stack: err.stack,
+        });
+      }
+    }
+
+    // ❌ Invalid Request
+    return res.status(400).send("Invalid request");
+  } catch (error) {
+    console.error("Function error:", error);
     return res.status(500).json({
-      error: "Image fetch or upload failed",
-      message: err.message,
-      stack: err.stack,
+      error: "Function crashed",
+      message: error.message,
+      stack: error.stack,
     });
   }
-}
+};
