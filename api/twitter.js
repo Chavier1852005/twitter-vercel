@@ -59,25 +59,25 @@ module.exports = async (req, res) => {
         const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
         const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
 
-        const fetchImage = async (url) => {
+        const fetchImageBuffer = async (url) => {
           const res = await axios.get(url, { responseType: "arraybuffer" });
           const contentType = res.headers["content-type"];
           if (!contentType.startsWith("image/")) {
             throw new Error(`Invalid image response from ${url}: ${contentType}`);
           }
-          return Buffer.from(res.data).toString("base64");
+          return Buffer.from(res.data);
         };
 
-        const profilePicData = await fetchImage(profilePicUrl);
-        const bannerData = await fetchImage(bannerUrl);
+        const profilePicBuffer = await fetchImageBuffer(profilePicUrl);
+        const bannerBuffer = await fetchImageBuffer(bannerUrl);
 
-        console.log("Fetched image sizes:", {
-          profilePicSize: profilePicData.length,
-          bannerSize: bannerData.length,
+        console.log("Fetched image buffer sizes:", {
+          profilePicSize: profilePicBuffer.length,
+          bannerSize: bannerBuffer.length,
         });
 
-        await userClient.v1.updateAccountProfileImage(profilePicData);
-        await userClient.v1.updateAccountProfileBanner(bannerData);
+        await userClient.v1.updateAccountProfileImage(profilePicBuffer);
+        await userClient.v1.updateAccountProfileBanner(bannerBuffer);
         console.log("Images uploaded");
 
         return res.status(200).send("Your X profile has been updated.");
