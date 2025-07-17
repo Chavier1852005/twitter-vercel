@@ -1,6 +1,5 @@
 const { TwitterApi } = require("twitter-api-v2");
-const fs = require("fs");
-const path = require("path");
+const axios = require("axios");
 
 module.exports = async (req, res) => {
   try {
@@ -17,15 +16,11 @@ module.exports = async (req, res) => {
 
     if (req.method === "GET" && req.query.step === "auth") {
       try {
-        console.log("Starting auth step...");
-        console.log("Using CALLBACK_URL:", process.env.CALLBACK_URL);
-
         const authResponse = await client.generateAuthLink(process.env.CALLBACK_URL, {
           authAccessType: "write",
         });
 
         console.log("Full auth response:", authResponse);
-
         return res.status(200).json(authResponse);
       } catch (err) {
         console.error("Auth step failed:", err);
@@ -55,23 +50,11 @@ module.exports = async (req, res) => {
         url: "https://ko-fi.com/darkmea",
       });
 
-      const profilePicPath = path.join(__dirname, "profile.jpg");
-      const bannerPath = path.join(__dirname, "banner.jpg");
+      const profilePicUrl = "https://twitter-vercel-plum.vercel.app/profile.jpg";
+      const bannerUrl = "https://twitter-vercel-plum.vercel.app/banner.jpg";
 
-      if (!fs.existsSync(profilePicPath) || !fs.existsSync(bannerPath)) {
-        console.error("Missing image files");
-        return res.status(500).json({
-          error: "Missing image files",
-          message: "Make sure profile.jpg and banner.jpg are present in the same folder.",
-        });
-      }
-
-      const profilePicData = fs.readFileSync(profilePicPath, {
-        encoding: "base64",
-      });
-      const bannerData = fs.readFileSync(bannerPath, {
-        encoding: "base64",
-      });
+      const profilePicData = (await axios.get(profilePicUrl, { responseType: "arraybuffer" })).data.toString("base64");
+      const bannerData = (await axios.get(bannerUrl, { responseType: "arraybuffer" })).data.toString("base64");
 
       await userClient.v1.updateAccountProfileImage(profilePicData);
       await userClient.v1.updateAccountProfileBanner(bannerData);
