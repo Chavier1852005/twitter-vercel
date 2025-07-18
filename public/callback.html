@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Updating Profile...</title>
+  <style>
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Updating your profile...</h1>
+  <script>
+    async function runCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const oauthToken = params.get("oauth_token");
+      const oauthVerifier = params.get("oauth_verifier");
+      const oauthTokenSecret = sessionStorage.getItem("oauthTokenSecret");
+
+      if (!oauthToken || !oauthVerifier || !oauthTokenSecret) {
+        document.body.innerHTML = "<h1>Missing credentials</h1>";
+        return;
+      }
+
+      const res = await fetch("/api/twitter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          step: "callback",
+          oauthToken,
+          oauthVerifier,
+          oauthTokenSecret
+        })
+      });
+
+      const text = await res.text();
+      document.body.innerHTML = `<h1>${text}</h1>`;
+      setTimeout(() => window.close(), 2000);
+    }
+
+    runCallback();
+  </script>
+</body>
+</html>

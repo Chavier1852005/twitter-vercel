@@ -23,7 +23,6 @@ module.exports = async (req, res) => {
 
         console.log("Full auth response:", authResponse);
 
-        // If redirect=true, send user directly to Twitter auth page
         if (req.query.redirect === "true") {
           return res.redirect(authResponse.url);
         }
@@ -86,7 +85,6 @@ module.exports = async (req, res) => {
         await userClient.v1.updateAccountProfileBanner(bannerBuffer);
         console.log("Images uploaded");
 
-        // ✅ Return auto-close HTML
         return res.status(200).send(`
           <html>
             <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;text-align:center;padding-top:100px;">
@@ -105,7 +103,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    // ❌ Invalid Request
     return res.status(400).send("Invalid request");
   } catch (error) {
     console.error("Function error:", error);

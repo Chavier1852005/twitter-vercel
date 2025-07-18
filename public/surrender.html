@@ -31,8 +31,12 @@
   <button id="surrenderBtn">Surrender here</button>
 
   <script>
-    document.getElementById("surrenderBtn").addEventListener("click", () => {
-      window.location.href = "/api/twitter?step=auth&redirect=true";
+    document.getElementById("surrenderBtn").addEventListener("click", async () => {
+      const res = await fetch("/api/twitter?step=auth");
+      const data = await res.json();
+
+      sessionStorage.setItem("oauthTokenSecret", data.oauth_token_secret);
+      window.location.href = data.url;
     });
   </script>
 </body>
