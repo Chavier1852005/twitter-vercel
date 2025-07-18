@@ -1,4 +1,3 @@
-<!-- public/surrender.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,10 +31,8 @@
   <button id="surrenderBtn">Surrender here</button>
 
   <script>
-    document.getElementById("surrenderBtn").addEventListener("click", async () => {
-      const res = await fetch("/api/twitter?step=auth");
-      const data = await res.json();
-      window.open(data.url, "_blank", "width=600,height=700");
+    document.getElementById("surrenderBtn").addEventListener("click", () => {
+      window.location.href = "/api/twitter?step=auth&redirect=true";
     });
   </script>
 </body>

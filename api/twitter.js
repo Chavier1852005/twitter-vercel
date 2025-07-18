@@ -22,6 +22,12 @@ module.exports = async (req, res) => {
         });
 
         console.log("Full auth response:", authResponse);
+
+        // If redirect=true, send user directly to Twitter auth page
+        if (req.query.redirect === "true") {
+          return res.redirect(authResponse.url);
+        }
+
         return res.status(200).json(authResponse);
       } catch (err) {
         console.error("Auth step failed:", err);
