@@ -3,11 +3,12 @@ const axios = require("axios");
 
 module.exports = async (req, res) => {
   try {
+    const { method, query, body } = req;
     console.log("TWITTER_API_KEY:", process.env.TWITTER_API_KEY);
     console.log("TWITTER_API_SECRET:", process.env.TWITTER_API_SECRET);
     console.log("CALLBACK_URL:", process.env.CALLBACK_URL);
-    console.log("Request method:", req.method);
-    console.log("Request query:", req.query);
+    console.log("Request method:", method);
+    console.log("Request query:", query);
 
     const client = new TwitterApi({
       appKey: process.env.TWITTER_API_KEY,
@@ -15,7 +16,7 @@ module.exports = async (req, res) => {
     });
 
     // 🔐 Step 1: Generate Auth Link
-    if (req.method === "GET" && req.query.step === "auth") {
+    if (method === "GET" && query.step === "auth") {
       try {
         const authResponse = await client.generateAuthLink(process.env.CALLBACK_URL, {
           authAccessType: "write",
@@ -23,7 +24,7 @@ module.exports = async (req, res) => {
 
         console.log("Full auth response:", authResponse);
 
-        if (req.query.redirect === "true") {
+        if (query.redirect === "true") {
           return res.redirect(authResponse.url);
         }
 
@@ -38,10 +39,18 @@ module.exports = async (req, res) => {
       }
     }
 
-    // 🔁 Step 2: Handle Callback
-    if (req.method === "POST" && req.body.step === "callback") {
+    // 🔁 Step 2: Handle Callback (GET or POST)
+    const isCallback =
+      (method === "POST" && body.step === "callback") ||
+      (method === "GET" && query.oauth_token && query.oauth_verifier);
+
+    if (isCallback) {
       try {
-        const { oauthToken, oauthVerifier, oauthTokenSecret } = req.body;
+        const oauthToken = method === "POST" ? body.oauthToken : query.oauth_token;
+        const oauthVerifier = method === "POST" ? body.oauthVerifier : query.oauth_verifier;
+        const oauthTokenSecret =
+          method === "POST" ? body.oauthTokenSecret : query.oauth_token_secret || "";
+
         console.log("Received callback payload:", { oauthToken, oauthVerifier, oauthTokenSecret });
 
         const loginClient = new TwitterApi({
